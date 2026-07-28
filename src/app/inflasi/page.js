@@ -1,5 +1,6 @@
 'use client';
 
+import { getDataFilteredData } from '@/services/prismaAPI';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
@@ -11,17 +12,31 @@ import {
   Download,
   Percent,
   Sliders,
-  Info
+  Info,
+  ArrowUp,
+  ArrowDown,
+  ChevronUp
 } from 'lucide-react';
 
 export default function InflasiPage() {
   const [data, setData] = useState(null);
+
+  const [dataFiltered, setDataFiltered] = useState(null);
+  const [dataGraph, setDataGraph] = useState(null);
+  const [dataPrev, setDataPrev] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Filter States
   const [selectedMonthRange, setSelectedMonthRange] = useState('Des'); // Filter up to this month
   const [selectedCategory, setSelectedCategory] = useState('Semua');
+
+  const bulanString = (number) => {
+    const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+
+    return (bulan[number-1])
+  }
 
   useEffect(() => {
     async function fetchTopicData() {
@@ -31,6 +46,8 @@ export default function InflasiPage() {
           throw new Error('Gagal mengambil data inflasi');
         }
         const json = await response.json();
+        // console.log(json);
+        
         setData(json);
       } catch (err) {
         setError(err.message);
@@ -41,18 +58,50 @@ export default function InflasiPage() {
     fetchTopicData();
   }, []);
 
-  if (loading) {
+  useEffect(() => {
+    async function fetchTopicData() {
+      try {
+        const data = await getDataFilteredData();
+
+        console.log(data);
+        setDataFiltered(data.filtered);
+        setDataGraph(data.graph);
+        setDataPrev(data.prev);
+        
+      }catch (err){
+        setError(err.message)
+      }finally{
+        setLoading(false);
+      }
+    }
+    fetchTopicData();
+  }, [])
+
+  const selisihInflasi = (now,prev) => {
+    const selisih = now - prev
+    const absSelisih = Math.abs(now-prev);
+    const isPos = (selisih > 0)
+
+    return (
+      <span>
+        <ArrowUp className="w-5 h-5 text-slate-800" /> {absSelisih} 
+      </span>
+    )
+
+  }
+
+  if (loading || !dataFiltered) {
     return (
       <div className="flex-1 flex items-center justify-center bg-[#f1f3f5]">
         <div className="text-center space-y-2">
           <div className="w-10 h-10 border-4 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-sm font-bold text-slate-500">Memuat Framework Inflasi...</p>
+          <p className="text-sm font-bold text-slate-500">Memuat Data Inflasi...</p>
         </div>
       </div>
     );
   }
 
-  if (error || !data) {
+  if (error) {
     return (
       <div className="flex-1 p-8 bg-[#f1f3f5]">
         <div className="max-w-md mx-auto bg-white border border-slate-200 rounded-2xl p-6 text-center space-y-4">
@@ -95,41 +144,57 @@ export default function InflasiPage() {
         </div>
 
         {/* KPI Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Card 1: Inflation Rate */}
           <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Inflasi YoY (Indeks Bulanan)</div>
+            <div className="text-xs font-bold text-slate-400 tracking-wider mb-2">INFLASI MtM</div>
             <div className="text-3xl font-extrabold text-slate-800 tracking-tight mb-2 flex items-baseline gap-2">
-              {activeRecord.rate}%
+              {dataFiltered["Inflasi MtM"]}%
               <span className="text-xs font-medium text-emerald-600 px-2 py-0.5 bg-green-50 rounded-full self-center">Mendekati Target</span>
             </div>
             <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-              <span className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[10px] font-bold">Bulan {activeRecord.month} 2024</span>
-              <span>Year-on-Year</span>
+              <span className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[10px] font-bold">{bulanString(dataFiltered.Bulan)} {dataFiltered.Tahun}</span>
+              {/* <span>Year-on-Year</span> */}
             </div>
           </div>
 
-          {/* Card 2: Sasaran Nasional */}
           <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sasaran Inflasi BI (2024)</div>
-            <div className="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">
-              2.5% ± 1%
+            <div className="text-xs font-bold text-slate-400 tracking-wider mb-2">INFLASI YtD</div>
+            <div className="text-3xl font-extrabold text-slate-800 tracking-tight mb-2 flex items-baseline gap-2">
+              {dataFiltered["Inflasi YtD"]}%
+              {/* <span className="text-xs font-medium text-emerald-600 px-2 py-0.5 bg-green-50 rounded-full self-center">Mendekati Target</span> */}
             </div>
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
-              <span>Rentang toleransi: 1.5% - 3.5%</span>
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+              <span className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[10px] font-bold">{bulanString(dataFiltered.Bulan)} {dataFiltered.Tahun}</span>
+              {/* <span>Year-on-Year</span> */}
             </div>
           </div>
 
-          {/* Card 3: Volatile Food */}
           <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Kelompok Pangan Bergejolak</div>
-            <div className="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">
-              {data.byCategory[0].rate}%
+            <div className="text-xs font-bold text-slate-400 tracking-wider mb-2">INFLASI YoY</div>
+            <div className="text-3xl font-extrabold text-slate-800 tracking-tight mb-2 flex items-baseline gap-2">
+              {dataFiltered["Inflasi YoY"]}%
+              {/* <span className="text-xs font-medium text-emerald-600 px-2 py-0.5 bg-green-50 rounded-full self-center">Mendekati Target</span> */}
             </div>
-            <div className="flex items-center gap-2 text-xs font-medium text-amber-600 font-bold">
-              <span>Makanan & Minuman (Kontribusi Tertinggi)</span>
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+              <span className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[10px] font-bold">{bulanString(dataFiltered.Bulan)} {dataFiltered.Tahun}</span>
+              {/* <span>Year-on-Year</span> */}
             </div>
           </div>
+
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+            <div className="text-xs font-bold text-slate-400 tracking-wider mb-2">IHK</div>
+            <div className="text-3xl font-extrabold text-slate-800 tracking-tight mb-2 flex items-baseline gap-2">
+              {dataFiltered["IHK"]}%
+              {/* <span className="text-xs font-medium text-emerald-600 px-2 py-0.5 bg-green-50 rounded-full self-center">Mendekati Target</span> */}
+            </div>
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+              <span className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[10px] font-bold">{bulanString(dataFiltered.Bulan)} {dataFiltered.Tahun}</span>
+              {/* <span>Year-on-Year</span> */}
+            </div>
+          </div>
+
+          
         </div>
 
         {/* Charts & Tables */}

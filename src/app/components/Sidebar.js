@@ -1,42 +1,42 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Users, 
-  BarChart3, 
-  TrendingUp, 
-  Sprout 
-} from 'lucide-react';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Users,
+  BarChart3,
+  TrendingUp,
+  Sprout,
+} from "lucide-react";
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   const menuItems = [
     {
-      name: 'Dashboard Utama',
-      href: '/',
+      name: "Home",
+      href: "/",
       icon: LayoutDashboard,
     },
     {
-      name: 'Kemiskinan',
-      href: '/kemiskinan',
+      name: "Kemiskinan",
+      href: "/kemiskinan",
       icon: Users,
     },
     {
-      name: 'PDRB',
-      href: '/pdrb',
+      name: "PDRB",
+      href: "/pdrb",
       icon: BarChart3,
     },
     {
-      name: 'Inflasi',
-      href: '/inflasi',
+      name: "Inflasi",
+      href: "/inflasi",
       icon: TrendingUp,
     },
     {
-      name: 'Pertanian',
-      href: '/pertanian',
+      name: "Pertanian",
+      href: "/pertanian",
       icon: Sprout,
     },
   ];
@@ -49,8 +49,12 @@ export default function Sidebar() {
           M
         </div>
         <div>
-          <h1 className="font-bold text-slate-800 tracking-tight leading-none text-sm">Dashboard Majene</h1>
-          <span className="text-[11px] font-medium text-slate-400">Topik Strategis</span>
+          <h1 className="font-bold text-slate-800 tracking-tight leading-none text-sm">
+            Dashboard Majene
+          </h1>
+          <span className="text-[11px] font-medium text-slate-400">
+            Topik Strategis
+          </span>
         </div>
       </div>
 
@@ -64,25 +68,36 @@ export default function Sidebar() {
           const Icon = item.icon;
 
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
-                isActive
-                  ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-              }`}
-            >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} />
-              {item.name}
-            </Link>
+            <>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3  px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                  isActive
+                    ? "bg-slate-900 text-white shadow-md shadow-slate-900/10"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                }`}
+              >
+                <Icon
+                  className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400 group-hover:text-slate-600"}`}
+                />
+                {item.name}
+              </Link>
+              {item.name === "Home" && (
+                <div className="px-2 text-[10px] mt-8 font-bold text-slate-400 uppercase tracking-wider">
+                  Data
+                </div>
+              )}
+            </>
           );
         })}
       </nav>
 
       {/* Footer Info */}
       <div className="p-6 border-t border-slate-200/80 text-center">
-        <p className="text-[11px] text-slate-400 font-medium">BPS & Bappeda Majene © 2026</p>
+        <p className="text-[11px] text-slate-400 font-medium">
+          BPS Majene © 2026
+        </p>
       </div>
     </aside>
   );
