@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ChevronLeft,
   Download,
@@ -14,6 +14,28 @@ import {
   getKelompok,
   getDataDetailperBulan,
 } from "@/services/prismaAPI";
+
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+);
+import { Line } from "react-chartjs-2";
+
 import { filerSelect } from "@/app/components/FilterSelect";
 
 export default function InflasiDetailClient({
@@ -27,13 +49,13 @@ export default function InflasiDetailClient({
   // Filter States
   const [selectedMonthRange, setSelectedMonthRange] = useState("Des"); // Filter up to this month
   const [selectedCategory, setSelectedCategory] = useState("Semua");
-
+  const [selectedKomoditas, setSelectedKomoditas] = useState("Umum");
   const [loadingTipe, setLoadingTipe] = useState(false);
 
   const [data, setData] = useState([]);
   const [kelompokData, setKelompokData] = useState(initialKelompok || null);
 
-  // const [tipe, setTipe] = useState(0);
+  const lineChartRef = useRef(null);
 
   const [filter, setFilter] = useState({
     tahun: new Date().getFullYear(),
@@ -59,12 +81,29 @@ export default function InflasiDetailClient({
     "Desember",
   ];
 
+  const chartData = {
+    labels: [...data]
+      .reverse()
+      .map((item) => `${namaBulan[item.Bulan - 1]} ${item.Tahun}`),
+    datasets: [
+      {
+        label: jenis,
+        data: [...data].reverse().map((item) => item.nilai),
+        pointRadius: 4,
+        borderColor: "#2196F3",
+        backgroundColor: "#ffffff",
+        tension: 0.4,
+        borderWidth: 3,
+      },
+    ],
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const data = await getDataDetailperBulan(
-          `Inflasi ${jenis}`,
+          `${jenis != "IHK" ? "Inflasi " + jenis : jenis}`,
           filter.kode_filter,
           filter.tahun,
           filter.bulan,
@@ -102,7 +141,7 @@ export default function InflasiDetailClient({
     <div>
       <div className="flex-1 flex flex-col xl:flex-row h-screen overflow-hidden bg-[#f1f3f5]">
         {/* LEFT COLUMN: Main Dashboard Content */}
-        <div className="w-full">
+        <div className="w-full h-screen overflow-y-auto">
           <div className="flex-1 p-8 overflow-y-auto space-y-6">
             {/* Navigation Breadcrumb */}
             <div className="flex items-center gap-2">
@@ -142,16 +181,18 @@ export default function InflasiDetailClient({
 
           {/* Tabel */}
           <div className="bg-white bordergrid grid-cols-1 2xl:grid-cols-2 gap-6 mx-8 p-8 rounded-xl border border-slate-200/80 overflow-x-auto">
-            <p className="text-xs text-slate-400 font-medium mb-8">
+            <p className="text-xs text-slate-400 font-medium ">
               {filter.tipe == 1
                 ? "Kelompok Pengeluaran"
                 : filter.tipe == 2
                   ? "Sub-Kelompok Pengeluaran"
                   : "Komoditas"}
-                  : 
-                  
+              :
             </p>
-            <table className="w-full text-left text-xs border-collapse">
+            <p className="text-lg text-black mb-8 font-bold">
+              {selectedKomoditas}
+            </p>
+            <table className="w-full text-left text-xs border-collapse text-black">
               <thead className="sticky top-0 bg-white">
                 <tr className="border-b border-slate-200/80">
                   <th className="px-4 py-2 text-center">Bulan</th>
@@ -160,18 +201,51 @@ export default function InflasiDetailClient({
                 </tr>
               </thead>
               <tbody>
-                {!loading &&
+                {!loading ? (
                   data.map((item, index) => (
-                    <tr key={index} className="border-b border-slate-200/80">
+                    <tr
+                      key={index}
+                      className="border-b border-slate-200/80 hover:*:bg-slate-50"
+                    >
                       <td className="px-4 py-2 text-center">
                         {namaBulan[item.Bulan - 1]}
                       </td>
                       <td className="px-4 py-2 text-center">{item.Tahun}</td>
                       <td className="px-4 py-2 text-center">{item.nilai}</td>
                     </tr>
-                  ))}
+                  ))
+                ) : (
+                  <tr>
+                    {/* Nanti animasi loading bakal ditaro disini */}
+                    <td colSpan="3" className="px-4 py-2 text-center mt-2">
+                      Loading...
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
+          </div>
+
+          {/* Chart */}
+          <div className="bg-white bordergrid mt-10 grid-cols-1 2xl:grid-cols-2 gap-6 mx-8 p-8 rounded-xl border border-slate-200/80 overflow-x-auto text-black">
+
+            <p className="w-full text-center font-bold mb-4">
+              Visualisasi
+            </p>
+
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-slate-400 text-sm">Loading chart...</p>
+              </div>
+            ) : data.length > 0 ? (
+              <Line ref={lineChartRef} data={chartData} />
+            ) : (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-slate-400 text-sm">
+                  Tidak ada data untuk ditampilkan.
+                </p>
+              </div>
+            )}
           </div>
         </div>
         {/* RIGHT COLUMN: Filter Panel */}
@@ -203,7 +277,7 @@ export default function InflasiDetailClient({
           ) : (
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                <CircleDollarSign className="w-3.5 h-3.5 text-slate-400" />
+                <CircleDollarSign className="w-3.5 h-3.5 text-slate-400 mb-2"/>
                 {filter.tipe == 1
                   ? "Kelompok Pengeluaran"
                   : filter.tipe == 2
@@ -212,9 +286,16 @@ export default function InflasiDetailClient({
               </label>
               <select
                 value={filter.kode_filter}
-                onChange={(e) =>
-                  setFilter({ ...filter, kode_filter: e.target.value })
-                }
+                onChange={(e) => {
+                  const selectedValue = e.target.value;
+                  const selectedItem = kelompokData?.result.find(
+                    (item) => String(item.Kode) === selectedValue,
+                  );
+
+                  setSelectedKomoditas(selectedItem ? selectedItem.NamaKomoditas : "Umum");
+
+                  setFilter({ ...filter, kode_filter: e.target.value });
+                }}
                 className={`w-full px-3 py-2.5 bg-slate-50 border border-slate-200 ${selectedCategory === 0 ? "text-gray-500" : "text-slate-700"} rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-500`}
               >
                 <option value={0}>pilih...</option>

@@ -42,7 +42,6 @@ import {
 } from "lucide-react";
 
 export default function InflasiPage(initialData) {
-    
   console.log("Initial Data: ", initialData);
 
   const [data, setData] = useState(null);
@@ -58,7 +57,9 @@ export default function InflasiPage(initialData) {
     new Date().getMonth(),
   );
 
-  const [dataFiltered, setDataFiltered] = useState(initialData.initialData.filtered);
+  const [dataFiltered, setDataFiltered] = useState(
+    initialData.initialData.filtered,
+  );
   const [dataGraph, setDataGraph] = useState(initialData.initialData.graph);
   const [dataPrev, setDataPrev] = useState(initialData.initialData.prev);
   const [values, setValues] = useState({
@@ -486,7 +487,7 @@ export default function InflasiPage(initialData) {
               </span>
               {/* <span>Year-on-Year</span> */}
             </div>
-            <div className="absolute flex items-center justify-center left-1/2 bottom-3 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 text-xs">
+            <div className="absolute flex items-center justify-center text-black left-1/2 bottom-3 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 text-xs">
               Lihat Selengkapnya <ChevronRight className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -513,7 +514,7 @@ export default function InflasiPage(initialData) {
               </span>
               {/* <span>Year-on-Year</span> */}
             </div>
-            <div className="absolute flex items-center justify-center left-1/2 bottom-3 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 text-xs">
+            <div className="absolute flex items-center justify-center text-black left-1/2 bottom-3 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 text-xs">
               Lihat Selengkapnya <ChevronRight className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -540,7 +541,7 @@ export default function InflasiPage(initialData) {
               </span>
               {/* <span>Year-on-Year</span> */}
             </div>
-            <div className="absolute flex items-center justify-center left-1/2 bottom-3 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 text-xs">
+            <div className="absolute flex items-center justify-center text-black left-1/2 bottom-3 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 text-xs">
               Lihat Selengkapnya <ChevronRight className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -564,7 +565,7 @@ export default function InflasiPage(initialData) {
               </span>
               {/* <span>Year-on-Year</span> */}
             </div>
-            <div className="absolute flex items-center justify-center left-1/2 bottom-3 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 text-xs">
+            <div className="absolute flex items-center justify-center text-black left-1/2 bottom-3 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 text-xs">
               Lihat Selengkapnya <ChevronRight className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -637,15 +638,18 @@ export default function InflasiPage(initialData) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50/60 ">
-                  {!loadingAndil &&
-                    andilData.map((c) => {
+                  {!loadingAndil ? (
+                    selectedIndicator != "IHK" ? (
+                      
+                    
+                    andilData.map((c, index) => {
                       const isSelected =
                         selectedCategory === "Semua" ||
                         c.category === selectedCategory;
 
                       return (
                         <tr
-                          key={c.category}
+                          key={index}
                           className={`transition-colors ${
                             isSelected
                               ? "text-slate-700 bg-white"
@@ -665,7 +669,18 @@ export default function InflasiPage(initialData) {
                           </td>
                         </tr>
                       );
-                    })}
+                    })
+                    ) : (
+                      <td colSpan="3" className="px-4 py-2 text-black mt-8 text-center">
+                        Tidak ada andil inflasi yang dapat ditampilkan
+                      </td>
+                    )
+                  ) : (
+
+                    <td colSpan="3" className="px-4 py-2 text-black mt-4 text-center">
+                      Loading...
+                    </td>
+                  )}
                 </tbody>
               </table>
             </div>
